@@ -4,11 +4,9 @@
     import Web3 from "web3";
     import { createEventDispatcher } from "svelte";
 
-    export let showConnectedWallet = false;
     let accounts = [];
     let connectedWallet = "";
-
-
+    let web3
     onMount(() => connectBrowserWallet());
 
     const dispatch = createEventDispatcher();
@@ -21,7 +19,11 @@
         } else {
             await updateAccountsList();
         }
-        web3 = new Web3(web3.currentProvider);
+        // alert("web3")
+        // alert(web3)
+        // alert("window.ethereum")
+        // alert(JSON.stringify(window.ethereum))
+        web3 = new Web3(window.ethereum);
         ethereum.on("accountsChanged", async (accounts) => {
             // alert(`in accountsChanged`);
             await updateAccountsList();
@@ -44,9 +46,6 @@
             web3,
         });
     };
-
 </script>
 
-{#if connectedWallet !== undefined && showConnectedWallet}
-    You are connected with wallet: {connectedWallet}
-{/if}
+You are connected with wallet: {connectedWallet}

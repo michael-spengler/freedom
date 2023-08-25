@@ -3,17 +3,19 @@
   import Seo from "./Seo.svelte";
   import { onMount } from "svelte";
   import Metamask from "./components/Metamask.svelte";
+  import { erc20ABI } from "./freedom-abi";
+  import Web3 from "web3";
 
+  // import { Contract } from 'web3-eth-contract';
 
-  let searchTerm = "";
+  // const contract = new Contract(erc20ABI);
+
+  const smartContractAddress = "0x9ca719e1Aa0De610208Ca5fbD4663877a7FE422e";
+  // @ts-ignore
+  let proofLink = "";
   let publicWalletAddress;
   let web3;
-
-  onMount(async () => {
-    setTimeout(() => {
-      // optimizing speed for first meaningful content display ... https://pagespeed.web.dev/
-    }, 1000 * 1);
-  });
+  onMount(async () => {});
 
   let topNavClass = "topnav";
 
@@ -25,13 +27,27 @@
     }
   }
 
-  
-  
   const handleWalletConnected = async (event) => {
     publicWalletAddress = event.detail.publicWalletAddress;
     web3 = event.detail.web3;
+
+    // alert(JSON.stringify(event.detail))
+    setTimeout(async() => {
+
+      const theERC20Contract = new web3.eth.Contract(
+        erc20ABI,
+        smartContractAddress
+        );
+        
+        const result = (await theERC20Contract.methods.balanceOf("0x9E972a43B3B8D68cD70930697E16429E47E88151")).call()
+        console.log(result)
+        // const result = (await (await theERC20Contract.methods
+        // .balanceOf("0x9E972a43B3B8D68cD70930697E16429E47E88151")))
+        // .call();
+        
+        // console.log(result);
+      }, 2 * 1000)
   };
-  
 </script>
 
 <Seo
@@ -47,7 +63,13 @@
 <div class={topNavClass} id="myTopnav">
   <!-- svelte-ignore a11y-missing-attribute -->
   <a
-    href="https://github.com/cultfamily-on-github/cult-donations-microservice/issues/new"
+    href="https://github.com/michael-spengler/freedom/"
+    target="_blank"
+    class="linkChampagne">Check The Code</a
+  >
+  <!-- svelte-ignore a11y-missing-attribute -->
+  <a
+    href="https://github.com/michael-spengler/freedom/issues/new"
     target="_blank"
     class="linkChampagne">Give Feedback</a
   >
@@ -59,48 +81,34 @@
 
 <main class="container">
   <div class="text-center">
-      <h1>Freedom</h1>
+    <h1>Freedom</h1>
 
-      <p><br /><br /></p>
+    <p><br /><br /></p>
 
-      This currency lets you explore tools and architectures of freedom.
+    Please let us explore tools and architectures of freedom with this currency.
 
+    <p><br /><br /></p>
 
-
-      <p><br /><br /></p>
-
-      <div class="input-group">
-        <!-- svelte-ignore a11y-autofocus -->
-        <input
-          type="proofLink"
-          bind:value={searchTerm}
-          placeholder="add link to proof that you care about freedom"
-        />
-      </div>
-
-
+    <div class="input-group">
+      <!-- svelte-ignore a11y-autofocus -->
+      <input
+        type="proofLink"
+        bind:value={proofLink}
+        placeholder="add link to proof that you care about freedom"
+      />
+    </div>
 
     <p><br /></p>
 
-    
+    <p><br /></p>
 
     <p><br /></p>
 
-    
+    <Metamask on:walletConnected={handleWalletConnected} />
 
     <p><br /></p>
 
-    <Metamask
-    on:walletConnected={handleWalletConnected}
-    showConnectedWallet={false}
-  />
-
     <p><br /></p>
-
-    
-
-    <p><br /></p>
-
   </div>
 </main>
 
@@ -139,8 +147,6 @@
     background-color: #efdcb3;
     color: black;
   }
-
-  
 
   .topnav .icon {
     display: none;
