@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "./set-backend-url-prog.sh && vite",
-    "build": "./set-backend-url-prod.sh && vite build && ./prepare-deployment-via-gh-pages.sh",
+    "dev": "vite",
+    "build": "vite build && ./prepare-deployment-via-gh-pages.sh",
     "preview": "vite preview"
   },
   "devDependencies": {

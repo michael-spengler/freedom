@@ -16,7 +16,7 @@
         function handleChainChanged(chainId) {
             // We recommend reloading the page, unless you must do otherwise.
             window.location.reload();
-        }ˇ
+        }
     });
 
     const dispatch = createEventDispatcher();
@@ -58,4 +58,11 @@
     };
 </script>
 
+{#if connectedWallet.length > 0} 
 You are connected with wallet: {connectedWallet}
+{/if}
+{#if connectedWallet.length === 0} 
+Please login via selfhosted wallet - e.g. https://metamask.io browser extension
+{/if}
+
+

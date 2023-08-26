@@ -6,13 +6,13 @@
   padding: 0;
 }
 
-.linkChampagne {
+.linkWhite {
   color: white;
 }
 
 body {
   font-family: 'Arial';
-  font-size: 18px;
+  font-size: 22px;
   background-color: rgb(0, 153, 255);
   line-height: 1.6;
   color: white
