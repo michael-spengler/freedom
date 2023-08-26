@@ -2,5 +2,7 @@
 
 sed -i'' -e 's/href="\//href=".\//g' ./dist/index.html
 sed -i'' -e 's/src="\//src=".\//g' ./dist/index.html
+sed -i'' -e 's/crossorigin//g' ./dist/index.html
 
+rm -rf ./../docs
 cp -r ./dist ./../docs

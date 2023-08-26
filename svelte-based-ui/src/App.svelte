@@ -84,7 +84,6 @@
         currentThreshold = await (
           await theERC20Contract.methods.threshold()
         ).call();
-        alert(currentThreshold);
 
         ready = true;
         console.log(balanceOfFreedomOfConnectedWallet);
