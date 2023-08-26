@@ -59,8 +59,9 @@
             "can stay empty - maybe also not needed in get... in SC only for duplicate approvals check it might be helpful",
           };
           
-          prospects.push(prospect);
-          console.log(prospects);
+          if (prospect.walletAddressOfMember != "0x0000000000000000000000000000000000000000") {
+            prospects.push(prospect);
+          }
         }
         
           helper = await (
