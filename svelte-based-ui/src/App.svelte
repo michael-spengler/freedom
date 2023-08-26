@@ -59,6 +59,7 @@
             "can stay empty - maybe also not needed in get... in SC only for duplicate approvals check it might be helpful",
           };
           
+
           if (prospect.walletAddressOfMember != "0x0000000000000000000000000000000000000000") {
             prospects.push(prospect);
           }
