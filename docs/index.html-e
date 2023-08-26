@@ -2,13 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.ico" />
-		<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./images/favicon-32x32.ico" />
+		<link rel="icon" type="image/png" sizes="16x16" href="./images/favicon-16x16.ico" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CULT Playground</title>
+    <title>Freedom</title>
     <script type="module" crossorigin src="/assets/index.b50b781e.js"></script>
-    <link rel="stylesheet" href="/assets/index.3bc5352c.css">
+    <link rel="stylesheet" href="./assets/index.3bc5352c.css">
   </head>
   <body>
     <div id="app"></div>
