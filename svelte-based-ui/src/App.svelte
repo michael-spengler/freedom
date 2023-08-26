@@ -5,9 +5,9 @@
   import { erc20ABI } from "./freedom-abi";
   import Web3 from "web3";
 
-  const smartContractAddress = "0xf709B84402D6d3a082Bf63Ca70565F0ac174357E"; // on Modulus Testnet
+  // const smartContractAddress = "0xf709B84402D6d3a082Bf63Ca70565F0ac174357E"; // on Modulus Testnet
   // const smartContractAddress = "tbd"; // on Modulus Mainnet
-  // const smartContractAddress = "tbd"; // on Polygon zkEVM
+  const smartContractAddress = "0xAbAF0b69662750Fe13C69816e793545629B30f71"; // on Polygon zkEVM
 
   let proofLink = "";
   let publicWalletAddress;
@@ -48,7 +48,7 @@
 
         for (let prospectEntry of helper) {
           const splitArray = prospectEntry.toString().split(",");
-
+          
           const prospect = {
             walletAddressOfMember: splitArray[0],
             appliedOn: splitArray[1],
@@ -56,30 +56,31 @@
             amountOfReceivedApprovals: splitArray[3],
             approvedOn: splitArray[4],
             approversForThisMember:
-              "can stay empty - maybe also not needed in get... in SC only for duplicate approvals check it might be helpful",
+            "can stay empty - maybe also not needed in get... in SC only for duplicate approvals check it might be helpful",
           };
+          
           prospects.push(prospect);
+          console.log(prospects);
         }
-
-        console.log(prospects);
-        helper = await (
+        
+          helper = await (
           await theERC20Contract.methods.getApprovedMembers()
-        ).call();
-
-        for (let approvedMemberEntry of helper) {
-          const splitArray = approvedMemberEntry.toString().split(",");
-
-          const approvedMember = {
-            walletAddressOfMember: splitArray[0],
-            appliedOn: splitArray[1],
-            proofLink: splitArray[2],
-            amountOfReceivedApprovals: splitArray[3],
-            approvedOn: splitArray[4],
-            approversForThisMember:
+          ).call();
+          
+          for (let approvedMemberEntry of helper) {
+            const splitArray = approvedMemberEntry.toString().split(",");
+            
+            const approvedMember = {
+              walletAddressOfMember: splitArray[0],
+              appliedOn: splitArray[1],
+              proofLink: splitArray[2],
+              amountOfReceivedApprovals: splitArray[3],
+              approvedOn: splitArray[4],
+              approversForThisMember:
               "can stay empty - maybe also not needed in get in SC only for duplicate approvals check it might be helpful",
-          };
-          approvedMembers.push(approvedMember);
-        }
+            };
+            approvedMembers.push(approvedMember);
+          }
 
         currentThreshold = await (
           await theERC20Contract.methods.threshold()

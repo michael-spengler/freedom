@@ -6,12 +6,23 @@
 
     let accounts = [];
     let connectedWallet = "";
-    let web3
+    let web3;
     onMount(async () => {
-        connectBrowserWallet()
-        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        connectBrowserWallet();
+        const chainId = await window.ethereum.request({
+            method: "eth_chainId",
+        });
 
-        window.ethereum.on('chainChanged', handleChainChanged);
+        if (chainId != 1101) {
+            confirm("I understand that I should connect to the Polygon zkEVM");
+
+            await window.ethereum.request({
+                method: "wallet_switchEthereumChain",
+                params: [{ chainId: Web3.utils.toHex(1101) }],
+            });
+        }
+
+        window.ethereum.on("chainChanged", handleChainChanged);
 
         function handleChainChanged(chainId) {
             // We recommend reloading the page, unless you must do otherwise.
@@ -58,11 +69,10 @@
     };
 </script>
 
-{#if connectedWallet.length > 0} 
-You are connected with wallet: {connectedWallet}
+{#if connectedWallet.length > 0}
+    You are connected with wallet: {connectedWallet}
 {/if}
-{#if connectedWallet.length === 0} 
-Please login via selfhosted wallet - e.g. https://metamask.io browser extension
+{#if connectedWallet.length === 0}
+    Please login via selfhosted wallet - e.g. https://metamask.io browser
+    extension
 {/if}
-
-
