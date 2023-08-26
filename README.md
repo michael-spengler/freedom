@@ -1,7 +1,11 @@
 # Freedom
 
+https://michael-spengler.github.io/freedom
+
+
 ## The Challenge
-Centralized systems seem to have a tendency to breed corrupt or even totalitarian regimes.     
+Centralized systems seem to have a tendency to breed corrupt or even totalitarian regimes.      
+Someone shall protect people from their own bad behaviour until they experience they probably should have supported freedom in the first place.    
 
 ## The Goal
 In order to cultivate freedom, fairness and peace we support decentralization and with that free peer 2 peer systems.   
