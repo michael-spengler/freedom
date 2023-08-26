@@ -31,7 +31,6 @@
     publicWalletAddress = event.detail.publicWalletAddress;
     web3 = event.detail.web3;
 
-    // alert(JSON.stringify(event.detail))
     setTimeout(async() => {
 
       const theERC20Contract = new web3.eth.Contract(
@@ -39,15 +38,14 @@
         smartContractAddress
         );
         
-        const result = (await theERC20Contract.methods.balanceOf("0x9E972a43B3B8D68cD70930697E16429E47E88151")).call()
+        const result = await (await theERC20Contract.methods.balanceOf("0x9E972a43B3B8D68cD70930697E16429E47E88151")).call()
         console.log(result)
-        // const result = (await (await theERC20Contract.methods
-        // .balanceOf("0x9E972a43B3B8D68cD70930697E16429E47E88151")))
-        // .call();
-        
-        // console.log(result);
       }, 2 * 1000)
   };
+
+  function joinUs() {
+    alert("call smart contract")
+  }
 </script>
 
 <Seo
@@ -85,7 +83,7 @@
 
     <p><br /><br /></p>
 
-    Please let us explore tools and architectures of freedom with this currency.
+    Let us explore tools, architectures and incentive systems for freedom.
 
     <p><br /><br /></p>
 
@@ -97,11 +95,19 @@
         placeholder="add link to proof that you care about freedom"
       />
     </div>
+    <p><br></p>
+    {#if proofLink.length > 0}
+      <button on:click={joinUs}>
+        Send
+      </button>
+    {/if}
 
     <p><br /></p>
 
+    Other Holders provided e.g. the following links: <p><br></p>
+    <a href="https://twitter.com/Peer2peerE/status/1695323724646322412?s=20" target="_blank">https://twitter.com/Peer2peerE/status/1695323724646322412?s=20</a>
     <p><br /></p>
-
+    
     <p><br /></p>
 
     <Metamask on:walletConnected={handleWalletConnected} />
@@ -122,21 +128,21 @@
     display: none;
   }
   .whiteLink {
-    color: #efdcb3;
+    color: white;
   }
   h1 {
-    color: #d7c69d;
+    color: white;
   }
 
   .topnav {
     overflow: hidden;
-    background-color: black;
+    background-color: rgb(0, 153, 255);
   }
 
   .topnav a {
     float: left;
     display: block;
-    color: #efdcb3;
+    color: white;
     text-align: center;
     padding: 14px 16px;
     text-decoration: none;
@@ -144,7 +150,7 @@
   }
 
   .topnav a:hover {
-    background-color: #efdcb3;
+    background-color: white;
     color: black;
   }
 

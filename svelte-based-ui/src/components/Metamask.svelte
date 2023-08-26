@@ -7,7 +7,17 @@
     let accounts = [];
     let connectedWallet = "";
     let web3
-    onMount(() => connectBrowserWallet());
+    onMount(async () => {
+        connectBrowserWallet()
+        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+
+        window.ethereum.on('chainChanged', handleChainChanged);
+
+        function handleChainChanged(chainId) {
+            // We recommend reloading the page, unless you must do otherwise.
+            window.location.reload();
+        }ˇ
+    });
 
     const dispatch = createEventDispatcher();
 
