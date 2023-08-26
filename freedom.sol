@@ -21,11 +21,17 @@ contract Freedom is ERC20 {
         uint256 appliedOn;
         string proofLink;
         uint256 amountOfReceivedApprovals;
-        address[] approversForThisMember;
         uint256 approvedOn;
+        address[] approversForThisMember;
     }
     
+    struct MemberMaster {
+        address walletAddressOfMember;
+        Member memberInfo;
+    }
+
     mapping(address => Member) public members;
+    address[] public memberAndProspectAddresses;
 
     uint256 public totalAmountOfApprovedMembers = 0;
     uint256 public threshold = 1;
@@ -65,17 +71,27 @@ contract Freedom is ERC20 {
         require(contractInitializationCompleted == false, "this ensures the dev of this smart contract only approves himself once");
         _;
     }
+    
+    modifier notYetInApproversListOfProspect(address prospectAddress) {
+        for (uint256 i = 0; i < members[prospectAddress].approversForThisMember.length; i++) {
+            require(members[prospectAddress].approversForThisMember[i] != msg.sender, "we avoid duplicate approvals from one approver for one prospect");
+        }   
+        _; 
+    }
 
     function applyForMembership(string calldata proofLink) public {
             require(members[msg.sender].appliedOn == 0, "it seems this wallet already applied once.");
 
             members[msg.sender].appliedOn = block.timestamp;
             members[msg.sender].proofLink = proofLink;
+            memberAndProspectAddresses.push(msg.sender);
+
     }
 
-    function approveMembership(address memberAddress) public onlyApprovedMembers onlyNotYetApprovedMembersCanBeApproved(memberAddress) onlyTokenholdersCanApprove {
+    function approveMembership(address memberAddress) public notYetInApproversListOfProspect(memberAddress) onlyApprovedMembers onlyNotYetApprovedMembersCanBeApproved(memberAddress) onlyTokenholdersCanApprove {
 
         require(members[memberAddress].appliedOn > 0, "this prospect seems not to have provided a great prooflink yet.");
+        require(msg.sender != memberAddress, "we avoid people to approve themselves - only the dev can do that once");
 
         members[memberAddress].amountOfReceivedApprovals++;
 
@@ -95,6 +111,7 @@ contract Freedom is ERC20 {
         }
     }
 
+    
     function transferRewardToSuccessfulApprovers(address newApprovedMember) public {
         for (uint i = 0; i < members[newApprovedMember].approversForThisMember.length; i++) {
             if (balanceOf(address(this)) >= (1 * (10 ** 18))){
@@ -110,10 +127,12 @@ contract Freedom is ERC20 {
         members[msg.sender].appliedOn = block.timestamp;
         members[msg.sender].proofLink = proofLink; 
         members[msg.sender].amountOfReceivedApprovals = 1; // by myself to initialize and to stay one of teh many
+        members[msg.sender].approversForThisMember.push(msg.sender); // as the developer I approve my own membership see onlyExecutedOnce
         members[msg.sender].approvedOn = block.timestamp;
         this.transfer(msg.sender, 24 * (10 ** decimals())); // the welcome gift for everyone until fully distributed
         totalAmountOfApprovedMembers = totalAmountOfApprovedMembers + 1; // shall be 1 then
         contractInitializationCompleted = true; // so this function can not be executed once again
+        memberAndProspectAddresses.push(msg.sender);
         emit MembershipApproved(msg.sender);
     }
 
@@ -164,6 +183,29 @@ contract Freedom is ERC20 {
         return address(this).balance;
     }
 
+    function getProspects() public view returns(MemberMaster[] memory) {
+        MemberMaster[] memory prospects = new MemberMaster[](memberAndProspectAddresses.length);
+        for (uint256 i = 0; i < memberAndProspectAddresses.length; i++) {
+            if (members[memberAndProspectAddresses[i]].approvedOn == 0) {
+                prospects[i] = MemberMaster({ walletAddressOfMember: memberAndProspectAddresses[i], memberInfo: members[memberAndProspectAddresses[i]]});
+            }
+        }
+
+        return prospects;
+    }
+
+    function getApprovedMembers() public view returns(MemberMaster[] memory) {
+        MemberMaster[] memory approvedMembers = new MemberMaster[](memberAndProspectAddresses.length); // array can be bigger than it needs to be
+        // Member[] memory approvedMembers = new Member[](memberAndProspectAddresses.length); // array can be bigger than it needs to be
+        for (uint256 i = 0; i < memberAndProspectAddresses.length; i++) {
+            if (members[memberAndProspectAddresses[i]].approvedOn > 0) {
+                approvedMembers[i] = MemberMaster({ walletAddressOfMember: memberAndProspectAddresses[i], memberInfo: members[memberAndProspectAddresses[i]]});
+
+            }
+        }
+
+        return approvedMembers;
+    }
 
         // function investInDAO(address smartContractAddressOfDAOToBeInvestedIn) public onlyTop1000Holders {
         // might be implemented and deployed when modulus mainnet is available 
