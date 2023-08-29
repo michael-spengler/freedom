@@ -1,224 +1,140 @@
-// This Smart Contract defines the cryptocurrency named Freedom (FREE)   
-// The goal of this project is to serve as a tool for freedom, fairness, peace and love    
-// This project shall inspire people to explore sufficiently decentralized crypto currencies and the corresponding concepts & technologies  
-// This project is inspired by the https://cultdao.io & by the https://cultmagazine.org (2022 & 2023)  
-// Please use self hosted wallets (at the moment https://metamask.io seems the best - still waiting for https://twitter.com/web3d3v wallet)      
-// Please make sure to use the right smart contract address & ensure you are connected with the right network    
-// Please make sure you are aware that there are many scammers out there. Do your own research and talk to people who already know more than you about self hosted wallets...   
-// This project can also serve as a mirror to be held in front of the people who blindly obey their unfair political regimes after the ones who supported freedom early are already rich and free   
+// This currency shall foster freedom, fairness, peace and love   
+// This currency shall help to free people who have been unlawfully framed and imprisoned    
+
+// I write the following code in a way that everyone shall be able to understand it     
+// Please share your feedback regarding security, readability, performance, low gas fees and tokenomics with the CULT community     
+// Please always make sure you are connected with the right blockchain and that you interact with the right smart contract     
+// Please do not trust anyone specifically especially if they pretend to be me the developer of this smart contract    
 
 
 // SPDX-License-Identifier: GNU GPL v3
 pragma solidity 0.8.2; 
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-/// @custom:security-contact dm to https://twitter.com/Peer2peerE 
 contract Freedom is ERC20 {
 
-    struct Member {
-        uint256 appliedOn;
+    uint256 public fixedSupply = 21000000; // There is a fixed supply of 21.000.000 Coins
+
+    struct FreedomFan {
+        address walletAddress;
         string proofLink;
-        uint256 amountOfReceivedApprovals;
+        uint256 appliedOn;
         uint256 approvedOn;
-        address[] approversForThisMember;
+        uint256 amountOfReceivedApprovals;
     }
+
+    mapping(address => uint256) public ids; 
+    mapping(uint256 => FreedomFan) public freedomFans; 
+    mapping(address => address[]) public approversForFreedomFan; 
+    mapping(address => uint256) public ethLiquidityProviders;  
     
-    struct MemberMaster {
-        address walletAddressOfMember;
-        Member memberInfo;
-    }
+    uint256 public numberOfFreedomFans = 1; 
+    uint256 public numberOfApprovedFreedomFans = 0;
+    uint256 public currentThresholdForBecomingFullyApproved = 1;
+    
+    bool public developerApproved = false; // will be set to true as soon as the developer is approved via the startProject function.
 
-    mapping(address => Member) public members;
-    address[] public memberAndProspectAddresses;
-
-    uint256 public totalAmountOfApprovedMembers = 0;
-    uint256 public threshold = 1;
-
-    bool contractInitializationCompleted = false; 
-
-    event MembershipApproved(address addressOfNewlyApprovedMember);
-
-    event MembershipNeedsMoreApprovals(address addressOfProspect, uint256 amountOfApprovalsReceived, uint256 currentThreshold);
-
-    event LOGIT(uint256 myText);
-
-
+    event LOGNumber(uint256);
+    
     constructor() ERC20("Freedom", "FREE") {
-        uint32 fixedSupply = 24000000;
-
-        _mint(address(this), fixedSupply * (10 ** decimals())); // all 24.000.000 coins to the contract
+        // with the following all 21.000.000 coins are transferred to this contract itself.
+        _mint(address(this), fixedSupply * (10 ** decimals())); 
     }
 
-
-    modifier onlyApprovedMembers() {
-        require(members[msg.sender].approvedOn > 0, "only approved Members can do that");
-        _;
-    }
-    
-    modifier onlyNotYetApprovedMembersCanBeApproved(address memberAddress) {
-        require(members[memberAddress].approvedOn == 0, "only not yet approved members can be approved");
-        _;
-    }
-
-    modifier onlyTokenholdersCanApprove {
-        require (balanceOf(msg.sender) > 0, "only holders can approve others");
-        _;
-    }
-
-    modifier onlyExecutedOnce() {
-        require(contractInitializationCompleted == false, "this ensures the dev of this smart contract only approves himself once");
-        _;
-    }
-    
-    modifier notYetInApproversListOfProspect(address prospectAddress) {
-        for (uint256 i = 0; i < members[prospectAddress].approversForThisMember.length; i++) {
-            require(members[prospectAddress].approversForThisMember[i] != msg.sender, "we avoid duplicate approvals from one approver for one prospect");
+    // The following modifiers are executed as checks before specific functions (see then further below) to protect the correct flow
+    modifier avoidDuplicateApprovals(address freedomFan) { 
+        for (uint256 i = 0; i < approversForFreedomFan[freedomFan].length; i++) {
+            require(approversForFreedomFan[freedomFan][i] != msg.sender, "we avoid duplicate approvals from one approver for one freedom fan");
         }   
         _; 
     }
-
-    function applyForMembership(string calldata proofLink) public {
-            require(members[msg.sender].appliedOn == 0, "it seems this wallet already applied once.");
-
-            members[msg.sender].appliedOn = block.timestamp;
-            members[msg.sender].proofLink = proofLink;
-            memberAndProspectAddresses.push(msg.sender);
-
+    modifier onlyNotYetApprovedFreedomFansCanBeApproved(address freedomFan) {
+        require(freedomFans[ids[freedomFan]].approvedOn == 0, "only not yet approved members can be approved");
+        _;
     }
-
-    function approveMembership(address memberAddress) public notYetInApproversListOfProspect(memberAddress) onlyApprovedMembers onlyNotYetApprovedMembersCanBeApproved(memberAddress) onlyTokenholdersCanApprove {
-
-        require(members[memberAddress].appliedOn > 0, "this prospect seems not to have provided a great prooflink yet.");
-        require(msg.sender != memberAddress, "we avoid people to approve themselves - only the dev can do that once");
-
-        members[memberAddress].amountOfReceivedApprovals++;
-
-        members[memberAddress].approversForThisMember.push(msg.sender);
-        if (members[memberAddress].amountOfReceivedApprovals >= threshold) {
-            members[memberAddress].approvedOn = block.timestamp;
-            if (balanceOf(address(this)) >= 24 * (10 ** 18)){
-                this.transfer(memberAddress, 24 * (10 ** decimals())); // the welcome gift for everyone until fully distributed
-            }
-            totalAmountOfApprovedMembers = totalAmountOfApprovedMembers + 1;
-            if ((totalAmountOfApprovedMembers % 2) == 0) {
-                threshold++;
-            }
-            emit MembershipApproved(memberAddress);
-        } else {
-            emit MembershipNeedsMoreApprovals(memberAddress, members[memberAddress].amountOfReceivedApprovals, threshold);
-        }
+    modifier onlyApprovedHolders() {
+        require((freedomFans[ids[msg.sender]].approvedOn > 0 && balanceOf(msg.sender) > 0), "only approved holders can do that");
+        _;
     }
-
     
-    function transferRewardToSuccessfulApprovers(address newApprovedMember) public {
-        for (uint i = 0; i < members[newApprovedMember].approversForThisMember.length; i++) {
-            if (balanceOf(address(this)) >= (1 * (10 ** 18))){
-                if (balanceOf(members[newApprovedMember].approversForThisMember[i]) < 240 * (10**18)){ // assumption: no one needs more than 240 FREE - decentralization rocks
-                    this.transfer(members[newApprovedMember].approversForThisMember[i], 1 * (10 ** decimals())); // approvers reward
+
+    // Freedom Fans can join by sending a prooflink to proof they love freedom, fairness & peace
+    function joinFreedomFans(string memory proofLink) external {
+        require(ids[msg.sender] == 0, "it seems this wallet already applied once.");
+        numberOfFreedomFans = numberOfFreedomFans + 1;
+        ids[msg.sender] = numberOfFreedomFans;
+        freedomFans[numberOfFreedomFans].walletAddress = msg.sender;
+        freedomFans[numberOfFreedomFans].proofLink = proofLink;
+        freedomFans[numberOfFreedomFans].appliedOn = block.timestamp;
+        freedomFans[numberOfFreedomFans].approvedOn = 0; // not yet approved
+        freedomFans[numberOfFreedomFans].amountOfReceivedApprovals = 0; 
+    }
+
+    // As soon as a new Freedom Fan is fully approved, he and his approvers receive a reward until all Coins are distributed
+    function approveFreedomFan(address freedomFan) public avoidDuplicateApprovals(freedomFan) onlyApprovedHolders onlyNotYetApprovedFreedomFansCanBeApproved(freedomFan) {
+        freedomFans[ids[msg.sender]].amountOfReceivedApprovals++; 
+        if (freedomFans[ids[msg.sender]].amountOfReceivedApprovals >= currentThresholdForBecomingFullyApproved) {
+            freedomFans[ids[msg.sender]].approvedOn = block.timestamp;
+            this.transfer(freedomFan, 24 * (10 ** decimals()));
+            for (uint i = 0; i < approversForFreedomFan[freedomFan].length; i++) {
+                if (balanceOf(address(this)) >= (1 * (10 ** 18))){
+                    this.transfer(approversForFreedomFan[freedomFan][i], 1 * (10 ** decimals())); // approvers reward
                 }
             }
-        }
-    }
-    
-    
-    function approveMembershipOfDeveloper(string calldata proofLink) public onlyExecutedOnce {
-        members[msg.sender].appliedOn = block.timestamp;
-        members[msg.sender].proofLink = proofLink; 
-        members[msg.sender].amountOfReceivedApprovals = 1; // by myself to initialize and to stay one of teh many
-        members[msg.sender].approversForThisMember.push(msg.sender); // as the developer I approve my own membership see onlyExecutedOnce
-        members[msg.sender].approvedOn = block.timestamp;
-        this.transfer(msg.sender, 24 * (10 ** decimals())); // the welcome gift for everyone until fully distributed
-        totalAmountOfApprovedMembers = totalAmountOfApprovedMembers + 1; // shall be 1 then
-        contractInitializationCompleted = true; // so this function can not be executed once again
-        memberAndProspectAddresses.push(msg.sender);
-        emit MembershipApproved(msg.sender);
-    }
-
-    function getMember(address memberAddress) public view returns(Member memory) {
-        return members[memberAddress];
-    }
-
-
-    function buyFreedom() public payable onlyApprovedMembers { 
-        uint256 conversionRate = 0;
-        if (totalAmountOfApprovedMembers < 1000000 && totalAmountOfApprovedMembers >= 0) {
-            conversionRate = 1000000 - totalAmountOfApprovedMembers;
-        } else {
-            conversionRate = 1;
-        }
-
-        uint256 amountOfEtherReceived = msg.value;
-        uint256 amountOfFreedomToBeSent = amountOfEtherReceived * conversionRate;
-        
-        require((balanceOf(msg.sender) + amountOfFreedomToBeSent) <= 240 * (10**18), "assumption: no one needs more than 240 FREE - decentralization rocks");
-
-        this.transfer(msg.sender, amountOfFreedomToBeSent); 
-    }
-
-
-    function sellFreedom(uint256 amount) external onlyApprovedMembers {
-        require(allowance(msg.sender, address(this)) >= amount, "set allowance first");
-        require(amount >= (0.001 * (10 **18)), "you might send a higher amount to avoid arithmetic challenges");
-        uint256 conversionRate = 0;
-        if (totalAmountOfApprovedMembers < 1000000) {
-            conversionRate = 1000000 - totalAmountOfApprovedMembers;
-        } else {
-            conversionRate = 1;
-        }
-    
-        uint256 amountOfEtherINWEIToBeSent = amount / conversionRate;
-        require(address(this).balance >= amountOfEtherINWEIToBeSent, "Not enough ETH liquidity available for this deal atm.");
-
-        IERC20(address(this)).transferFrom(msg.sender, address(this), amount);
-
-
-        emit LOGIT(amountOfEtherINWEIToBeSent);
-        payable(msg.sender).transfer(amountOfEtherINWEIToBeSent);
-
-    }
-
-    function getEtherBalanceOfSmartContract() public view returns(uint256) {
-        return address(this).balance;
-    }
-
-    function getProspects() public view returns(MemberMaster[] memory) {
-        MemberMaster[] memory prospects = new MemberMaster[](memberAndProspectAddresses.length);
-        for (uint256 i = 0; i < memberAndProspectAddresses.length; i++) {
-            if (members[memberAndProspectAddresses[i]].approvedOn == 0) {
-                prospects[i] = MemberMaster({ walletAddressOfMember: memberAndProspectAddresses[i], memberInfo: members[memberAndProspectAddresses[i]]});
+            if ((currentThresholdForBecomingFullyApproved % 2) == 0){ 
+                currentThresholdForBecomingFullyApproved++; 
             }
         }
-
-        return prospects;
     }
 
-    function getApprovedMembers() public view returns(MemberMaster[] memory) {
-        MemberMaster[] memory approvedMembers = new MemberMaster[](memberAndProspectAddresses.length); // array can be bigger than it needs to be
-        // Member[] memory approvedMembers = new Member[](memberAndProspectAddresses.length); // array can be bigger than it needs to be
-        for (uint256 i = 0; i < memberAndProspectAddresses.length; i++) {
-            if (members[memberAndProspectAddresses[i]].approvedOn > 0) {
-                approvedMembers[i] = MemberMaster({ walletAddressOfMember: memberAndProspectAddresses[i], memberInfo: members[memberAndProspectAddresses[i]]});
-
-            }
-        }
-
-        return approvedMembers;
+    function startProject() public { 
+        // address developerWallet = 0x9E972a43B3B8D68cD70930697E16429E47E88151;
+        address developerWallet = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4; // test = remix.ethereum.org wallet 1
+        require(developerApproved == false && msg.sender == developerWallet, "startProject can only be executed once to start this project in a clear and fair way");
+        ids[msg.sender] = numberOfFreedomFans;
+        freedomFans[numberOfFreedomFans].walletAddress = msg.sender;
+        freedomFans[numberOfFreedomFans].proofLink = "https://twitter.com/Peer2peerE/status/1695323724646322412";
+        freedomFans[numberOfFreedomFans].appliedOn = block.timestamp;
+        freedomFans[numberOfFreedomFans].approvedOn = block.timestamp; // not yet approved
+        freedomFans[numberOfFreedomFans].amountOfReceivedApprovals = 1; 
+        approversForFreedomFan[msg.sender].push(address(this)); 
+        numberOfApprovedFreedomFans = 1;
+        this.transfer(msg.sender, 24 * (10 ** decimals()));
+        developerApproved = true;
     }
 
-        // function investInDAO(address smartContractAddressOfDAOToBeInvestedIn) public onlyTop1000Holders {
-        // might be implemented and deployed when modulus mainnet is available 
-        // instead of ETH we would use CULT on modulus
-        // combine long-, mid-, and short- term bollinger bands - see also https://deno.land/x/bollinger_bands
-        // the following is just pseudo code which might serve as a reminder or inspiration
-        // struct DAOToBeInvestedIn {
-        //    address smartContractAddressOfDAOToBeInvestedIn; // resp. CULT on Modulus
-        //    uint256 numberOfUpvotes;
-        //    uint256 numberOfDownvotes;
-        //    }
-        // uint256 thresholdForDAOToBeInvestedInDecision;
-        // uint256 thresholdForRemovingDAOFromFurtherInvestments;
-        // }
+
+    function getPriceInWEI() public view returns(uint256 priceInWEI) {
+        return numberOfApprovedFreedomFans * (10**18) / 1000000000;
+    }
+
+   
+    // buy and sell here is designed to:  
+    // 1. be free from rather limiting dependencies and fees from liquidity pools, cexes and dexes      
+    // 2. restrict max buying amount per holder to 1 Finney to support long term decentralization & fairness    
+    // 3. ensure the price is defined by the network size and by the value of the network   
+    function buy() public payable onlyApprovedHolders { 
+        require(msg.value <= 1 * 10 ** 15, "you can buy for a maximum of one finney which is 0.001 ETH. chancellor on brink of second bailout for banks :)"); // this is meant to foster decentralization 
+        require(msg.value + ethLiquidityProviders[msg.sender] <=  1 * 10 ** 15, "you can overall buy for a maximum of one finney which is 0.001 ETH it seems you invested already earlier");
+        uint256 amountToBeTransferred = (msg.value / getPriceInWEI()) * (10**18);
+        require(balanceOf(address(this)) >= amountToBeTransferred, "you cannot buy that many at the moment via this function. buy from your neighbor if possible.");
+        this.transfer(msg.sender, amountToBeTransferred); 
+    }
+
+    function sell(uint256 amountInWEI) external  onlyApprovedHolders {
+        require(balanceOf(msg.sender) >= amountInWEI, "this smart contract does not support selling more than you have.");    
+        require(allowance(msg.sender, address(this)) >= amountInWEI, "please set an appropriate allowance first.");    
+        IERC20(address(this)).transferFrom(msg.sender, address(this), amountInWEI); 
+        uint256 amountInWEIToBeSent = 1000000000 / numberOfApprovedFreedomFans;
+        emit LOGNumber(amountInWEIToBeSent);
+        require(address(this).balance >= amountInWEIToBeSent, "this smart contract does not have enough ETH liquidity available for this deal atm.");
+        payable(msg.sender).transfer(amountInWEIToBeSent);
+    }
+
 
 }
+
+// The blockchain technology as distributed ledger technology will gain appreciation even further once people appreciate their neighbours and everyone who loves freedom, fairness and peace even more imo.  
+// fun facts: https://github.com/michael-spengler/distributed-ledger-technology-hands-on-lecture/blob/main/fun-facts/bitcoin-related-fun-facts.md  
+
