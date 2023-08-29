@@ -13,7 +13,7 @@
 pragma solidity 0.8.2; 
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol"; // onlyOwner used for startProject function. at the end of startProject this contract is automatically renounced
+import "@openzeppelin/contracts/access/Ownable.sol"; // onlyOwner is used for the startProject function. at the end of startProject this contract is automatically renounced
 
 contract Freedom is ERC20, Ownable {
 
@@ -33,14 +33,12 @@ contract Freedom is ERC20, Ownable {
     mapping(address => uint256) public ethLiquidityProviders;  
     mapping(address => uint256) public maxRewardPerApprover;  
 
-    
     uint256 public numberOfFreedomFans = 1; 
     uint256 public numberOfApprovedFreedomFans = 0;
     uint256 public currentThresholdForBecomingFullyApproved = 1;
     
     bool public trustedInitiationCommunityInvited = false; // each project shall start with at least one - hopefully trustworthy - person  
     mapping(uint256 => address) invitedMembersOfTrustedInitiationCommunity; 
-
 
     event LOGMessage(string);
     
@@ -102,6 +100,7 @@ contract Freedom is ERC20, Ownable {
         }
     }
 
+    // The reason why I do not automatically send the rewards is that I think it is fair that the receiver of the rewards pays the gas fees
     function claimCurrentlyAvailableLiquidityBackedMaxRewards() public {
         if (balanceOf(address(this)) >= maxRewardPerApprover[msg.sender]) {
             this.transfer(msg.sender, maxRewardPerApprover[msg.sender]);
@@ -110,9 +109,10 @@ contract Freedom is ERC20, Ownable {
         }
     }
 
-    function startProject() public  { 
+
+    function startProject() public { 
         require(trustedInitiationCommunityInvited == false, "startProject can only be executed once.");
-        require(msg.sender == owner(), "startProject can only be executed by owner. at the end of startProject this contract is automatically renounced.");
+        require(msg.sender == owner(), "startProject can only be executed by the owner. at the end of startProject this contract is automatically renounced.");
 
         invitedMembersOfTrustedInitiationCommunity[1] = 0x9E972a43B3B8D68cD70930697E16429E47E88151; // lonely programmer atm :)
 
