@@ -39,9 +39,6 @@ contract Freedom is ERC20 {
     
     bool public developerApproved = false; // will be set to true as soon as the developer is approved via the startProject function.
 
-    address[] potentialInitiatorsOfThisProject = [
-        0x9E972a43B3B8D68cD70930697E16429E47E88151
-    ];
     event LOGMessage(string);
     
     constructor() ERC20("Freedom", "FREE") {
@@ -152,4 +149,3 @@ contract Freedom is ERC20 {
 
 // The blockchain technology as distributed ledger technology will gain appreciation even further once people appreciate their neighbours and everyone who loves freedom, fairness and peace even more imo.  
 // fun facts: https://github.com/michael-spengler/distributed-ledger-technology-hands-on-lecture/blob/main/fun-facts/bitcoin-related-fun-facts.md  
-
