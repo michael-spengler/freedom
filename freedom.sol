@@ -28,6 +28,8 @@ contract Freedom is ERC20 {
     mapping(uint256 => FreedomFan) public freedomFans; 
     mapping(address => address[]) public approversForFreedomFan; 
     mapping(address => uint256) public ethLiquidityProviders;  
+    mapping(address => uint256) public maxRewardPerApprover;  
+
     
     uint256 public numberOfFreedomFans = 1; 
     uint256 public numberOfApprovedFreedomFans = 0;
@@ -35,7 +37,7 @@ contract Freedom is ERC20 {
     
     bool public developerApproved = false; // will be set to true as soon as the developer is approved via the startProject function.
 
-    event LOGNumber(uint256);
+    event LOGMessage(string);
     
     constructor() ERC20("Freedom", "FREE") {
         // with the following all 21.000.000 coins are transferred to this contract itself.
@@ -71,21 +73,41 @@ contract Freedom is ERC20 {
         freedomFans[numberOfFreedomFans].amountOfReceivedApprovals = 0; 
     }
 
-    // As soon as a new Freedom Fan is fully approved, he and his approvers receive a reward until all Coins are distributed
+    // As soon as a new Freedom Fan is fully approved, he and his approvers are eligible to receive a reward until all Coins are distributed
     function approveFreedomFan(address freedomFan) public avoidDuplicateApprovals(freedomFan) onlyApprovedHolders onlyNotYetApprovedFreedomFansCanBeApproved(freedomFan) {
-        freedomFans[ids[msg.sender]].amountOfReceivedApprovals++; 
-        if (freedomFans[ids[msg.sender]].amountOfReceivedApprovals >= currentThresholdForBecomingFullyApproved) {
-            freedomFans[ids[msg.sender]].approvedOn = block.timestamp;
-            this.transfer(freedomFan, 24 * (10 ** decimals()));
+        freedomFans[ids[freedomFan]].amountOfReceivedApprovals++; 
+        if (freedomFans[ids[freedomFan]].amountOfReceivedApprovals >= currentThresholdForBecomingFullyApproved) {
+            freedomFans[ids[freedomFan]].approvedOn = block.timestamp;
+            if (balanceOf(address(this)) >= (1 * (10 ** 18))) {
+                maxRewardPerApprover[freedomFan] = 24 * (10 ** decimals()); // welcome gift to new freedom fan
+            } else {
+                emit LOGMessage("the fixed supply of overall 21.000.000 Coins / the balanceOf FREE of this contract does not allow welcome gifts atm. new approved freedom fans might invest in FREE via the buy function.");
+            }
+
             for (uint i = 0; i < approversForFreedomFan[freedomFan].length; i++) {
                 if (balanceOf(address(this)) >= (1 * (10 ** 18))){
-                    this.transfer(approversForFreedomFan[freedomFan][i], 1 * (10 ** decimals())); // approvers reward
+                        maxRewardPerApprover[approversForFreedomFan[freedomFan][i]] = maxRewardPerApprover[approversForFreedomFan[freedomFan][i]] + 1 * (10 ** decimals());
+                } else {
+                    emit LOGMessage("the fixed supply of overall 21.000.000 Coins / the balanceOf FREE does not allow direct rewards for approvers atm. the incentives should anyways be high enough to continue approving wisely.");
                 }
             }
             if ((currentThresholdForBecomingFullyApproved % 2) == 0){ 
                 currentThresholdForBecomingFullyApproved++; 
             }
         }
+    }
+
+    function getMaxReward() public view returns(uint256 maxReward) {
+        return maxRewardPerApprover[msg.sender];
+    }
+
+    function getCurrentlyClaimableLiquidityBackedMaxReward() public view returns(uint256 claimableLiquidityBackedMaxRewardBalance) {
+
+        return maxRewardPerApprover[msg.sender];
+    }
+
+    function claimRewardBalance() public {
+        this.transfer(msg.sender, getCurrentlyClaimableLiquidityBackedMaxReward()); 
     }
 
     function startProject() public { 
@@ -127,7 +149,6 @@ contract Freedom is ERC20 {
         require(allowance(msg.sender, address(this)) >= amountInWEI, "please set an appropriate allowance first.");    
         IERC20(address(this)).transferFrom(msg.sender, address(this), amountInWEI); 
         uint256 amountInWEIToBeSent = 1000000000 / numberOfApprovedFreedomFans;
-        emit LOGNumber(amountInWEIToBeSent);
         require(address(this).balance >= amountInWEIToBeSent, "this smart contract does not have enough ETH liquidity available for this deal atm.");
         payable(msg.sender).transfer(amountInWEIToBeSent);
     }
