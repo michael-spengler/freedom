@@ -4,6 +4,7 @@
 // I write the following code in a way that everyone shall be able to understand it     
 // Please share your feedback regarding security, readability, performance, low gas fees and tokenomics with the CULT community     
 // Please always make sure you are connected with the right blockchain and that you interact with the right smart contract     
+// Claim your rewards regularly - see claimCurrentlyAvailableLiquidityBackedMaxRewards
 // Please do not trust anyone specifically especially if they pretend to be me the developer of this smart contract    
 
 
@@ -97,22 +98,16 @@ contract Freedom is ERC20 {
         }
     }
 
-    function getMaxReward() public view returns(uint256 maxReward) {
-        return maxRewardPerApprover[msg.sender];
-    }
-
-    function getCurrentlyClaimableLiquidityBackedMaxReward() public view returns(uint256 claimableLiquidityBackedMaxRewardBalance) {
-
-        return maxRewardPerApprover[msg.sender];
-    }
-
-    function claimRewardBalance() public {
-        this.transfer(msg.sender, getCurrentlyClaimableLiquidityBackedMaxReward()); 
+    function claimCurrentlyAvailableLiquidityBackedMaxRewards() public {
+        if (balanceOf(address(this)) >= maxRewardPerApprover[msg.sender]) {
+            this.transfer(msg.sender, maxRewardPerApprover[msg.sender]);
+        } else {
+            this.transfer(msg.sender, balanceOf(address(this)));
+        }
     }
 
     function startProject() public { 
-        // address developerWallet = 0x9E972a43B3B8D68cD70930697E16429E47E88151;
-        address developerWallet = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4; // test = remix.ethereum.org wallet 1
+        address developerWallet = 0x9E972a43B3B8D68cD70930697E16429E47E88151; 
         require(developerApproved == false && msg.sender == developerWallet, "startProject can only be executed once to start this project in a clear and fair way");
         ids[msg.sender] = numberOfFreedomFans;
         freedomFans[numberOfFreedomFans].walletAddress = msg.sender;
@@ -126,11 +121,6 @@ contract Freedom is ERC20 {
         developerApproved = true;
     }
 
-
-    function getPriceInWEI() public view returns(uint256 priceInWEI) {
-        return numberOfApprovedFreedomFans * (10**18) / 1000000000;
-    }
-
    
     // buy and sell here is designed to:  
     // 1. be free from rather limiting dependencies and fees from liquidity pools, cexes and dexes      
@@ -139,7 +129,8 @@ contract Freedom is ERC20 {
     function buy() public payable onlyApprovedHolders { 
         require(msg.value <= 1 * 10 ** 15, "you can buy for a maximum of one finney which is 0.001 ETH. chancellor on brink of second bailout for banks :)"); // this is meant to foster decentralization 
         require(msg.value + ethLiquidityProviders[msg.sender] <=  1 * 10 ** 15, "you can overall buy for a maximum of one finney which is 0.001 ETH it seems you invested already earlier");
-        uint256 amountToBeTransferred = (msg.value / getPriceInWEI()) * (10**18);
+        uint256 priceOfOneFREEInWEI = numberOfApprovedFreedomFans * (10**18) / 1000000000; // the more approved freedom fans there are, the higher the value of FREE
+        uint256 amountToBeTransferred = (msg.value / priceOfOneFREEInWEI()) * (10**18);
         require(balanceOf(address(this)) >= amountToBeTransferred, "you cannot buy that many at the moment via this function. buy from your neighbor if possible.");
         this.transfer(msg.sender, amountToBeTransferred); 
     }
@@ -152,7 +143,6 @@ contract Freedom is ERC20 {
         require(address(this).balance >= amountInWEIToBeSent, "this smart contract does not have enough ETH liquidity available for this deal atm.");
         payable(msg.sender).transfer(amountInWEIToBeSent);
     }
-
 
 }
 
