@@ -13,10 +13,11 @@
 pragma solidity 0.8.2; 
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol"; // onlyOwner used for startProject function. at the end of startProject this contract is automatically renounced
 
-contract Freedom is ERC20 {
+contract Freedom is ERC20, Ownable {
 
-    uint256 public fixedSupply = 21000000; // There is a fixed supply of 21.000.000 Coins
+    uint256 public fixedSupply = 24000000; // There is a fixed supply of 24.000.000 Coins
 
     struct FreedomFan {
         address walletAddress;
@@ -37,28 +38,30 @@ contract Freedom is ERC20 {
     uint256 public numberOfApprovedFreedomFans = 0;
     uint256 public currentThresholdForBecomingFullyApproved = 1;
     
-    bool public developerApproved = false; // will be set to true as soon as the developer is approved via the startProject function.
+    bool public trustedInitiationCommunityInvited = false; // each project shall start with at least one - hopefully trustworthy - person  
+    mapping(uint256 => address) invitedMembersOfTrustedInitiationCommunity; 
+
 
     event LOGMessage(string);
     
     constructor() ERC20("Freedom", "FREE") {
-        // with the following all 21.000.000 coins are transferred to this contract itself.
+        // with the following all 24.000.000 coins are transferred to this contract itself.
         _mint(address(this), fixedSupply * (10 ** decimals())); 
     }
 
     // The following modifiers are executed as checks before specific functions (see then further below) to protect the correct flow
     modifier avoidDuplicateApprovals(address freedomFan) { 
         for (uint256 i = 0; i < approversForFreedomFan[freedomFan].length; i++) {
-            require(approversForFreedomFan[freedomFan][i] != msg.sender, "we avoid duplicate approvals from one approver for one freedom fan");
+            require(approversForFreedomFan[freedomFan][i] != msg.sender, "we avoid duplicate approvals from one approver for one freedom fan.");
         }   
         _; 
     }
     modifier onlyNotYetApprovedFreedomFansCanBeApproved(address freedomFan) {
-        require(freedomFans[ids[freedomFan]].approvedOn == 0, "only not yet approved freedom fans can be approved");
+        require(freedomFans[ids[freedomFan]].approvedOn == 0, "only not yet approved freedom fans can be approved.");
         _;
     }
     modifier onlyApprovedHolders() {
-        require((freedomFans[ids[msg.sender]].approvedOn > 0 && balanceOf(msg.sender) > 0), "only approved holders can do that");
+        require((freedomFans[ids[msg.sender]].approvedOn > 0 && balanceOf(msg.sender) > 0), "only approved holders can do that.");
         _;
     }
     
@@ -83,14 +86,14 @@ contract Freedom is ERC20 {
             if (balanceOf(address(this)) >= (1 * (10 ** 18))) {
                 maxRewardPerApprover[freedomFan] = 24 * (10 ** decimals()); // welcome gift to new freedom fan
             } else {
-                emit LOGMessage("the fixed supply of overall 21.000.000 Coins / the balanceOf FREE of this contract does not allow welcome gifts atm. new approved freedom fans might invest in FREE via the buy function.");
+                emit LOGMessage("the fixed supply of overall 24.000.000 Coins / the balanceOf FREE of this contract does not allow welcome gifts atm. new approved freedom fans might invest in FREE via the buy function.");
             }
 
             for (uint i = 0; i < approversForFreedomFan[freedomFan].length; i++) {
                 if (balanceOf(address(this)) >= (1 * (10 ** 18))){
                         maxRewardPerApprover[approversForFreedomFan[freedomFan][i]] = maxRewardPerApprover[approversForFreedomFan[freedomFan][i]] + 1 * (10 ** decimals());
                 } else {
-                    emit LOGMessage("the fixed supply of overall 21.000.000 Coins / the balanceOf FREE does not allow direct rewards for approvers atm. the incentives should anyways be high enough to continue approving wisely.");
+                    emit LOGMessage("the fixed supply of overall 24.000.000 Coins / the balanceOf FREE does not allow direct rewards for approvers atm. the incentives should anyways be high enough to continue approving wisely.");
                 }
             }
             if ((currentThresholdForBecomingFullyApproved % 2) == 0){ 
@@ -107,29 +110,35 @@ contract Freedom is ERC20 {
         }
     }
 
-    function startProject() public { 
-        address developerWallet = 0x9E972a43B3B8D68cD70930697E16429E47E88151; 
-        require(developerApproved == false && msg.sender == developerWallet, "startProject can only be executed once to start this project in a clear and fair way");
-        ids[msg.sender] = numberOfFreedomFans;
-        freedomFans[numberOfFreedomFans].walletAddress = msg.sender;
-        freedomFans[numberOfFreedomFans].proofLink = "https://twitter.com/Peer2peerE/status/1695323724646322412";
-        freedomFans[numberOfFreedomFans].appliedOn = block.timestamp;
-        freedomFans[numberOfFreedomFans].approvedOn = block.timestamp; // not yet approved
-        freedomFans[numberOfFreedomFans].amountOfReceivedApprovals = 1; 
-        approversForFreedomFan[msg.sender].push(address(this)); 
-        numberOfApprovedFreedomFans = 1;
-        this.transfer(msg.sender, 24 * (10 ** decimals()));
-        developerApproved = true;
+    function startProject() public  { 
+        require(trustedInitiationCommunityInvited == false, "startProject can only be executed once.");
+        require(msg.sender == owner(), "startProject can only be executed by owner. at the end of startProject this contract is automatically renounced.");
+
+        invitedMembersOfTrustedInitiationCommunity[1] = 0x9E972a43B3B8D68cD70930697E16429E47E88151; // lonely programmer atm :)
+
+        for (uint16 i; i < 1; i++){
+            ids[msg.sender] = numberOfFreedomFans;
+            freedomFans[numberOfFreedomFans].walletAddress = msg.sender;
+            freedomFans[numberOfFreedomFans].proofLink = "https://twitter.com/Peer2peerE/status/1695323724646322412"; // here one could imagine a general proof link related to all trusted freedom fans at the beginning of this project
+            freedomFans[numberOfFreedomFans].appliedOn = block.timestamp;
+            freedomFans[numberOfFreedomFans].approvedOn = block.timestamp; // not yet approved
+            freedomFans[numberOfFreedomFans].amountOfReceivedApprovals = 1; 
+            approversForFreedomFan[msg.sender].push(address(this)); 
+            numberOfApprovedFreedomFans = numberOfApprovedFreedomFans + 1;
+            this.transfer(msg.sender, 24 * (10 ** decimals()));
+        }
+        trustedInitiationCommunityInvited = true;
+        renounceOwnership();
     }
 
-   
+
     // buy and sell here is designed to:  
     // 1. be free from rather limiting dependencies and fees from liquidity pools, cexes and dexes      
     // 2. restrict max buying amount per holder to 1 Finney to support long term decentralization & fairness    
     // 3. ensure the price is defined by the network size and by the value of the network   
     function buy() public payable onlyApprovedHolders { 
         require(msg.value <= 1 * 10 ** 15, "you can buy for a maximum of one finney which is 0.001 ETH. chancellor on brink of second bailout for banks :)"); // this is meant to foster decentralization 
-        require(msg.value + ethLiquidityProviders[msg.sender] <=  1 * 10 ** 15, "you can overall buy for a maximum of one finney which is 0.001 ETH it seems you invested already earlier");
+        require(msg.value + ethLiquidityProviders[msg.sender] <=  1 * 10 ** 15, "you can overall buy for a maximum of one finney which is 0.001 ETH. it seems you invested already earlier.");
         uint256 priceOfOneFREEInWEI = numberOfApprovedFreedomFans * (10**18) / 1000000000; // the more approved freedom fans there are, the higher the value of FREE
         uint256 amountToBeTransferred = (msg.value / priceOfOneFREEInWEI) * (10**18);
         require(balanceOf(address(this)) >= amountToBeTransferred, "you cannot buy that many at the moment via this function. buy from your neighbor if possible.");
