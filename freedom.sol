@@ -5,7 +5,8 @@
 // Please share your feedback regarding security, readability, performance, low gas fees and tokenomics with the CULT community     
 // Please always make sure you are connected with the right blockchain and that you interact with the right smart contract     
 // Claim your rewards regularly - see claimCurrentlyAvailableLiquidityBackedMaxRewards
-// Please do not trust anyone specifically especially if they pretend to be me the developer of this smart contract    
+// Please do not trust anyone specifically too much especially if they pretend to be me the developer of this smart contract     
+// If you want to trust anyone in the crypto space I recommend to do so only if they have 1. skin in the game and 2. a several years long track record of doing & supporting the right things   
 
 
 // SPDX-License-Identifier: GNU GPL v3
@@ -38,6 +39,9 @@ contract Freedom is ERC20 {
     
     bool public developerApproved = false; // will be set to true as soon as the developer is approved via the startProject function.
 
+    address[] potentialInitiatorsOfThisProject = [
+        0x9E972a43B3B8D68cD70930697E16429E47E88151
+    ];
     event LOGMessage(string);
     
     constructor() ERC20("Freedom", "FREE") {
@@ -53,7 +57,7 @@ contract Freedom is ERC20 {
         _; 
     }
     modifier onlyNotYetApprovedFreedomFansCanBeApproved(address freedomFan) {
-        require(freedomFans[ids[freedomFan]].approvedOn == 0, "only not yet approved members can be approved");
+        require(freedomFans[ids[freedomFan]].approvedOn == 0, "only not yet approved freedom fans can be approved");
         _;
     }
     modifier onlyApprovedHolders() {
@@ -130,7 +134,7 @@ contract Freedom is ERC20 {
         require(msg.value <= 1 * 10 ** 15, "you can buy for a maximum of one finney which is 0.001 ETH. chancellor on brink of second bailout for banks :)"); // this is meant to foster decentralization 
         require(msg.value + ethLiquidityProviders[msg.sender] <=  1 * 10 ** 15, "you can overall buy for a maximum of one finney which is 0.001 ETH it seems you invested already earlier");
         uint256 priceOfOneFREEInWEI = numberOfApprovedFreedomFans * (10**18) / 1000000000; // the more approved freedom fans there are, the higher the value of FREE
-        uint256 amountToBeTransferred = (msg.value / priceOfOneFREEInWEI()) * (10**18);
+        uint256 amountToBeTransferred = (msg.value / priceOfOneFREEInWEI) * (10**18);
         require(balanceOf(address(this)) >= amountToBeTransferred, "you cannot buy that many at the moment via this function. buy from your neighbor if possible.");
         this.transfer(msg.sender, amountToBeTransferred); 
     }
